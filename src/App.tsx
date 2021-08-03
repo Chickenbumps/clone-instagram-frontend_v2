@@ -1,25 +1,53 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { ApolloProvider, useReactiveVar } from "@apollo/client";
+import { ThemeProvider } from "styled-components";
+import Login from "./screens/Login";
+import SignUp from "./screens/SignUp";
+import { darkTheme, GlobalStyles, lightTheme } from "./styles";
+import Home from "./screens/Home";
+import { client, darkModeVar, isLoggedInVar } from "./apollo";
+import { routes } from "./routes";
+import { HelmetProvider } from "react-helmet-async";
+import Layout from "./components/Layout";
+import Profile from "./screens/Profile";
 
 function App() {
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
+  const darkMode = useReactiveVar(darkModeVar);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ApolloProvider client={client}>
+      <HelmetProvider>
+        <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+          <GlobalStyles />
+          <div>
+            <Router>
+              <Switch>
+                <Route exact path={routes.home}>
+                  {isLoggedIn ? (
+                    <Layout>
+                      <Home />
+                    </Layout>
+                  ) : (
+                    <Login />
+                  )}
+                </Route>
+                {isLoggedIn ? null : (
+                  <Route exact path={routes.signUp}>
+                    <SignUp />
+                  </Route>
+                )}
+                <Route path={`/user/:username`}>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </Route>
+              </Switch>
+            </Router>
+          </div>
+        </ThemeProvider>
+      </HelmetProvider>
+    </ApolloProvider>
   );
 }
 
